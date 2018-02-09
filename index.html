@@ -16,15 +16,18 @@
     <link rel="stylesheet" href="stylesheet.css" type="text/css" />
   </head>
   <body>
-    <div id="loading-cover"></div>
+    <div id="loading-cover">
+      <span>Loading...</span>
+    </div>
     <div id="map-wrapper"></div>
     <div id="search-wrapper">
       <input id="search" type="search" placeholder="County"></input>
     </div>
     <div id="results-wrapper">
       <table>
-        <thead></thead>
-        <tbody></tbody>
+        <thead><tr><th><a href="#" id="export" download="">Download</a>&nbsp;Name</th><th>State</th><th>Population</th><th>Housing Units</th><th>Area (sq mi)</th></thead>
+        <tbody id="result"></tbody>
+        <tbody id="neighbors"></tbody>
       </table>
     </div>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
@@ -34,7 +37,7 @@
     crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.min.js"></script>
     <script>
-    var counties, findNeighbors, restyle, countyLayer, neighbors;
+    var counties, showResult, findNeighbors, restyle, countyLayer, neighbors, zoomToFeature;
 
     var map = new L.Map('map-wrapper', { center: new L.LatLng(39.828175, -98.5795), zoom: 5 });
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
@@ -49,32 +52,85 @@
       countyLayer = L.geoJSON(data, {
         onEachFeature: function(feature, layer){
           layer.on({
-            click: e => zoomToFeature(e.target.feature)
+            click: e => {
+              $('#loading-cover').fadeIn(e2 => {
+                zoomToFeature(e.target.feature);
+                showResult(e.target.feature);
+                findNeighbors(e.target.feature);
+                $('#loading-cover').fadeOut();
+              });
+            },
+            mouseover: e => {
+              e.target.openPopup();
+            }
           });
         }
-      }).bindPopup(layer => {
-        findNeighbors(layer.feature);
-        return `${layer.feature.properties.NAME}, ${layer.feature.properties.USPS}`
       })
-        .addTo(map);
+      .bindPopup(layer => `${layer.feature.properties.NAME}, ${layer.feature.properties.USPS}`)
+      .addTo(map);
 
       $('#search').on('awesomplete-selectcomplete', function(){
         let county, state;
         [county, state] = this.value.split(', ');
         let feature = counties.features.find(c => c.properties.NAME == county && c.properties.USPS == state);
         zoomToFeature(feature);
+        showResult(feature);
+        findNeighbors(feature);
+        $('#loading-cover').fadeOut();
       });
+
+      zoomToFeature = function(feature){
+        map.setView(L.latLng(feature.properties.LAT, feature.properties.LON), 8);
+      };
+
+      showResult = function(n){
+        $('#result').slideUp(function(){
+          $(this).html(
+            '<tr>' +
+            ['NAME', 'USPS'].map(v => {
+              return '<td>' + n.properties[v] + '</td>'
+            }).join('') +
+            ['POPULATION', 'HU10', 'CENSUSAREA'].map(v => {
+              return '<td>' + n.properties[v].toLocaleString() + '</td>'
+            }).join('') +
+            '</tr>'
+          ).slideDown();
+        });
+        $('#export').attr('download', 'Neighbors_of_' + n.properties.NAME.replace(/ /g, '_') + '_' + n.properties.USPS + '.csv');
+      };
 
       findNeighbors = function(feature){
         neighbors = counties.features.filter(c => turf.booleanOverlap(c, feature));
+        $('#neighbors').slideUp(function(){
+          $(this).html(
+            neighbors.map(n => {
+              return '<tr>' +
+              ['NAME', 'USPS'].map(v => {
+                return '<td>' + n.properties[v] + '</td>'
+              }).join('') +
+              ['POPULATION', 'HU10', 'CENSUSAREA'].map(v => {
+                return '<td>' + n.properties[v].toLocaleString() + '</td>'
+              }).join('') +
+              '</tr>';
+            }).join('\n')
+          ).slideDown();
+        })
       };
+
     }).done(e => {
-      $('#loading-cover').fadeOut(1000);
+      $('#loading-cover').fadeOut();
     });
 
-    function zoomToFeature(feature){
-      map.setView(L.latLng(feature.properties.LAT, feature.properties.LON), 8);
-    }
+    $('#export').on('mousedown', function(e){
+      let headers = 'NAME,STATE,POPULATION,HOUSINGUNITS,AREA(SQMI)';
+      let content = $('#neighbors tr').map(function(){
+        return $(this).find('td').map(function(){
+          return $(this).text().replace(/,/g,'')
+        }).get().join(',')
+      }).get().join('\r\n');
+      $(this).attr('href', 'data:text/csv;charset=utf-8,' + headers + '\n' + content);
+    });
+
     </script>
   </body>
 </html>

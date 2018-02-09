@@ -10,7 +10,16 @@ html, body, #map-wrapper, #loading-cover {
   top:0;
   left:0;
   z-index: 10000;
-  background: #cccccc;
+  background: white;
+}
+
+#loading-cover span{
+  position:absolute;
+  top:45%;
+  width: 100%;
+  text-align: center;
+  font-size: 96px;
+  font-family: sans-serif;
 }
 
 #search-wrapper{
@@ -24,14 +33,32 @@ html, body, #map-wrapper, #loading-cover {
 }
 
 #search{
-  font-size: 22px;
   border-radius: 4px;
-  height: 30px;
-  line-height: 30px;
 }
 
 #results-wrapper{
-  position:fixed;
-  bottom: 400px;
-  right: 400px;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 500;
+  background: white;
+  border-radius: 4px;
+  border: 2px solid rgba(0,0,0,0.2);
+  text-align: right;
+}
+
+#result{
+  font-style: italic;
+}
+
+#results-wrapper tr:hover{
+  background: yellow;
+}
+
+#export{
+  background: #cccccc;
+  border-radius: 4px;
+  padding: 2px;
+  color: black;
+  text-decoration: none;
 }

@@ -13,7 +13,8 @@ html, body, #map-wrapper, #loading-cover {
   background: white;
 }
 
-#loading-cover span{
+#loading-warning{
+  display: none;
   position:absolute;
   top:45%;
   width: 100%;
@@ -55,10 +56,16 @@ html, body, #map-wrapper, #loading-cover {
   background: yellow;
 }
 
+.leaflet-bottom.leaflet-right {
+  display: none;
+}
+
 #export{
+  text-align: right;
   background: #cccccc;
   border-radius: 4px;
-  padding: 2px;
+  padding: 4px;
+  margin: 5px;
   color: black;
   text-decoration: none;
 }

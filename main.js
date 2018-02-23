@@ -27,16 +27,16 @@ $(function(){
     });
 
     $('#search').on('awesomplete-selectcomplete', function(){
-      let county, state;
+      var county, state;
       [county, state] = this.value.split(', ');
-      let feature = counties.features.find(function(c){return c.properties.NAME == county && c.properties.USPS == state});
+      var feature = counties.features.find(function(c){return c.properties.NAME == county && c.properties.USPS == state});
       zoomToFeature(feature);
       showResult(feature);
       $('#loading-cover').fadeOut();
     });
 
     zoomToFeature = function(feature){
-      let ll = L.latLng(feature.properties.LAT, feature.properties.LON);
+      var ll = L.latLng(feature.properties.LAT, feature.properties.LON);
       map.setView(ll, 8);
       L.popup()
         .setLatLng(ll)
@@ -46,7 +46,7 @@ $(function(){
 
     showResult = function(feature){
       $('#neighbor-stats').slideUp(function(){
-        let neighbors = counties.features.filter(function(c){return feature.properties.neighbors.includes(c.properties.STATE + c.properties.COUNTY);});
+        var neighbors = counties.features.filter(function(c){return feature.properties.neighbors.includes(c.properties.STATE + c.properties.COUNTY);});
         $(this).find('tbody').html(
           '<tr style="font-style:italic">' +
             ['NAME', 'USPS'].map(function(v){return '<td>' + feature.properties[v] + '</td>'}).join('') +
@@ -72,8 +72,8 @@ $(function(){
   });
 
   $('#export').on('mousedown', function(e){
-    let headers = 'NAME,STATE,POPULATION,AREA(SQMI),DENSITY';
-    let content = $('#neighbors tr').map(function(){
+    var headers = 'NAME,STATE,POPULATION,AREA(SQMI),DENSITY';
+    var content = $('#neighbors tr').map(function(){
       return $(this).find('td').map(function(){
         return $(this).text().replace(/,/g,'')
       }).get().join(',')
@@ -82,10 +82,22 @@ $(function(){
   });
 
   round = function(number, precision) {
-    let factor = Math.pow(10, precision);
-    let tempNumber = number * factor;
-    let roundedTempNumber = Math.round(tempNumber);
+    var factor = Math.pow(10, precision);
+    var tempNumber = number * factor;
+    var roundedTempNumber = Math.round(tempNumber);
     return roundedTempNumber / factor;
   };
 
 });
+
+if (!String.prototype.includes) {
+  String.prototype.includes = function(search, start) {
+    'use strict';
+    if (typeof start !== 'number') start = 0;
+    if (start + search.length > this.length) {
+      return false;
+    } else {
+      return this.indexOf(search, start) !== -1;
+    }
+  };
+}

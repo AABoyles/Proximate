@@ -1,3 +1,5 @@
+var states;
+
 $(function(){
   'use strict';
 
@@ -13,12 +15,30 @@ $(function(){
 
   var neighbors = [];
 
+  $.getJSON('states.json', function(s){
+    states = s;
+    L.geoJSON(states, {
+      'style': function(feature){
+        return {
+          'fill': false
+        };
+      }
+    }).addTo(map);
+  });
+
   $.getJSON('counties.json', function(counties){
 
     var countyLayer = L.geoJSON(counties, {
+      'style': function(feature){
+        return {
+          'weight': 1,
+          'fillOpacity': 0
+        };
+      },
       'onEachFeature': function(feature, layer){
         layer.on({
           'click': function(e){
+            restyle(e.target.feature);
             zoomToFeature(e.target.feature);
             showResult(e.target.feature);
           }
@@ -46,6 +66,7 @@ $(function(){
         }
       }
       if(feature){
+        restyle(feature);
         zoomToFeature(feature);
         showResult(feature);
       }
@@ -59,6 +80,17 @@ $(function(){
         .setContent(feature.properties.NAME + ', ' + feature.properties.USPS)
         .openOn(map);
     }
+
+    function restyle(feature){
+      var fips = feature.properties.STATE + '' + feature.properties.COUNTY;
+      countyLayer.setStyle(function(f){
+        return {
+          'weight': 1,
+          'fillOpacity': f === feature ? 0.3 : (f.properties.neighbors.indexOf(fips) > -1 ? 0.3 : 0),
+          'fillColor': f === feature ? '#ff0000' : '#ffff00'
+        };
+      });
+    };
 
     function showResult(feature){
       $('#neighbor-stats').fadeOut(function(){
